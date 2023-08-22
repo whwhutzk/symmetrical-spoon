@@ -42,13 +42,13 @@ def s16_int(s16:list):
     s16_list = ("0x"+" 0x".join(s16)).split(" ")
     num=0
     for i in range(len(s16_list)):
-        num+= int(s16_list[i], 16)*pow(256, i)
+        num+= int(s16_list[i], 16)*pow(256, i)#将输入的16进制转换成整数，然后乘以256的幂
     return num
 
 def string2list(string):
-    return [string[i:i+2] for i in range(0, len(string), 2)] 
+    return [string[i:i+2] for i in range(0, len(string), 2)] #以两个长度进行字符串切片
 
-def decoderudder(statestring):
+def decoderudder(statestring):#从状态字符串中提取舵角信息并返回实际的舵角角度
     state = string2list(statestring)
     pos = int(s16_int(state[5:7])*0.0879) - 180
 #     need to decode to angle
@@ -60,12 +60,12 @@ def decoderudder(statestring):
 #     just return actual rudder angle
     return pos
 
-def checksum_rudder(checkData_rudder):
+def checksum_rudder(checkData_rudder):#计算舵角数据的校验和
     dataList = [int(x, 16) for x in checkData_rudder]
     sumnum = sum(dataList)
     while sumnum > 0xff:
         sumnum = sumnum - 0xff -0x01
-    sumnum = ~sumnum & 0xff
+    sumnum = ~sumnum & 0xff#按位与
     sumnum = str(hex(sumnum))[2:].zfill(2)
     return sumnum
 
