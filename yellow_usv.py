@@ -37,7 +37,7 @@ class USVData:
 #         use pwm value as the rpm here
         self.propellerpwm = 0.0
         self.control_time = 0.0
-Rudder Control and Read State
+#Rudder Control and Read State
 def s16_int(s16:list):
     s16_list = ("0x"+" 0x".join(s16)).split(" ")
     num=0
@@ -100,7 +100,7 @@ def readrudder():
         except:
             pass
         time.sleep(.1)
-compass
+#compass
 def bcd2float(string):
     if int(string[:2])==10:
         value = -(int(string[2:4])+int(string[4:])*0.01)
@@ -127,7 +127,7 @@ def readcompass():
         except:
             pass
         time.sleep(.1)
-GPS
+#GPS
 def ReadGps():
     global gpsstring
     gpsstring = b''
@@ -178,7 +178,7 @@ def rmc2gps(rmc_string):
     time = "20"+rmc[9][-2:]+'-'+rmc[9][-4:-2]+'-'+rmc[9][:2]+ " " +rmc[1][:2]+":"+rmc[1][2:4]+":"+rmc[1][4:]
     gps_info = dict(lon=lon, lat=lat, time=time, speed=speed, course=course)
     return gps_info
-Trans usvdata to hex
+#Trans usvdata to hex
 def make6845():
     global now_control_mode
     hexlist = "68 44 00 44 00 68 03 C8 45 01 00 00 00 21 11 11 14 46 24 45 4A E9 D0 06 4E 43 10 D3 01 3E 00 00 00 00 00 64 00 00 00 00 00 63 00 00 00 00 00 62 00 EF 09 00 00 00 00 32 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 88 04 50 00 ED 00 E0 16".split(" ")
