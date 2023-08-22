@@ -315,13 +315,6 @@ def RECV():
             board.set_pwm_duty(propeller_pwm_num,8.2+((rpm1+rpm1)/2)*(9.2-8.2)/100) 
             board.set_pwm_duty(rudder_pwm_num,7.5+rudder_angle*10/80) 
             print(commandlist)
-        
-        
-    
-
-    
-    
-    
 # for using threading compass
             
 threads = []
