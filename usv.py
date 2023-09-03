@@ -12,7 +12,6 @@ import threading, time
 from sys import exit
 import RPi.GPIO as GPIO
 
-
 # for extension board
 board = Board(1, 0x10)    # Select i2c bus 1, set address to 0x10
 def board_detect():
@@ -43,8 +42,6 @@ while board.begin() != board.STA_OK:    # Board begin and check board status
     time.sleep(2)
     print("board begin success")
 
-
-
 # set up for pwm and adc
 board.set_pwm_enable()                # Pwm channel need external power
 board.set_adc_enable()
@@ -64,7 +61,6 @@ def bcd2float(string):
     else:
         value = int(string[2:4])+int(string[4:])*0.01
     return value
-
 def decodeah200(ah200string):
     if len(ah200string)==56:
         ah200string_01 = ah200string[:28]
@@ -81,10 +77,6 @@ def decodeah200(ah200string):
                 heading = int(string[20:22])*100 + bcd2float(string[20:-2])
                 print('heading:',heading)
     return dict(acc_x=acc_x,acc_y=acc_y,acc_z=acc_z,pitch=pitch,roll=roll,heading=heading)
-
-
-
-
 compass_info = ''
 class CompassSerialPort:
     def __init__(self,port,buand):
@@ -96,7 +88,6 @@ class CompassSerialPort:
     def port_open(self):
         if not self.port.isOpen():
             self.port.open()
-    
     def port_close(self):
         self.port.close()
     def read_data(self):
@@ -107,8 +98,7 @@ class CompassSerialPort:
             command_accelerate = b'\x77\x04\x00\x54\x58'
             # command_anglespeed = b'\x77\x04\x00\x50\x54'
             command_list = [command_direction, command_accelerate]
-#             for decode angle and accelerate
-            
+#             for decode angle and accelerate    
             for command in command_list:
                 self.port.write(command)
                 num = self.port.inWaiting()
@@ -123,9 +113,6 @@ class CompassSerialPort:
             except:
                 pass
             time.sleep(.1)
-            
-
-
 # for decoding gps            
 def rmc2gps(rmc_string):
     rmc = rmc_string.split(",")
@@ -144,8 +131,6 @@ def rmc2gps(rmc_string):
     time = "20"+rmc[9][-2:]+'-'+rmc[9][-4:-2]+'-'+rmc[9][:2]+ " " +rmc[1][:2]+":"+rmc[1][2:4]+":"+rmc[1][4:]
     gps_info = dict(lon=lon, lat=lat, time=time, speed=speed, course=course)
     return gps_info            
-
-
 # gpsserial
 gpsstring = b''
 gps_info = ''
@@ -161,10 +146,8 @@ class GPSSerialPort:
     def port_open(self):
         if not self.port.isOpen():
             self.port.open()
-    
     def port_close(self):
         self.port.close()
-    
     def read_data(self):
         global gpsstring
         global gps_info
@@ -178,15 +161,13 @@ class GPSSerialPort:
                 # delete the first part no used the data
                 gpsstring = gpsstring.replace("\r","").replace("\n","")
                 gpsstring = r'$'+r'$'.join(gpsstring.split(r"$")[1:])
-                
                 # find rmc and gga string
                 rmc_list = [''.join(a) for a in re.findall(r'(\$GNRMC)(.*?)(\*)([A-Za-z0-9]{2})',gpsstring)]
                 gga_list = [''.join(a) for a in re.findall(r'(\$GNGGA)(.*?)(\*)([A-Za-z0-9]{2})',gpsstring)]
                 # print(rmc_list,430099)
                 for rmc_string in rmc_list:
                     gps_info = rmc2gps(rmc_string)
-                    # print(gps_info)
-                    
+                    # print(gps_info)        
                 #     delete decoded data
                     gpsstring = ''.join(gpsstring.split(rmc_string)[1:])
                     # gpsstring=gpsstring.replace(rmc_string,"")
@@ -200,9 +181,6 @@ class GPSSerialPort:
             except:
                 gpsstring = bytes(gpsstring,'utf-8') 
                 pass
-            
-            
-            
 def checksum(checkData):
     dataList = [int(x, 16) for x in checkData]
     sumnum = sum(dataList)
@@ -223,81 +201,60 @@ rotation_speed = 0
 now_control_mode = 0
 def make6845(state):
     global now_control_mode
-    hexlist = "68 44 00 44 00 68 03 C8 45 01 00 00 00 21 11 11 14 46 24 45 4A E9 D0 06 4E 43 10 D3 01 3E 00 00 00 00 00 64 00 00 00 00 00 63 00 00 00 00 00 62 00 EF 09 00 00 00 00 32 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 88 04 50 00 ED 00 E0 16".split(" ")
-    
+    hexlist = "68 44 00 44 00 68 03 C8 45 01 00 00 00 21 11 11 14 46 24 45 4A E9 D0 06 4E 43 10 D3 01 3E 00 00 00 00 00 64 00 00 00 \
+        00 00 63 00 00 00 00 00 62 00 EF 09 00 00 00 00 32 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 88 04 50 00 ED 00 E0 16".split(" ")
     hextime = state['time'].replace(".",":").replace(" ",":").replace("-",":").split(":")[1:]
-    
     lon = state['lon']
     hexlon = hex(int(round(lon,7)*10000000))[2:].zfill(8)
     hexlon = [hexlon[-2:],hexlon[-4:-2],hexlon[-6:-4],hexlon[-8:-6]]
-
     lat = state['lat']
     hexlat = hex(int(round(lat,7)*10000000))[2:].zfill(8)
     hexlat = [hexlat[-2:],hexlat[-4:-2],hexlat[-6:-4],hexlat[-8:-6]]
-
     speed = state['speed']
    # print("speed:",speed)
     hexspeed =  hex(int(round(speed,2)*100))[2:].zfill(4)
    # print("hexspeed_1:",hexspeed)
     hexspeed = [hexspeed[-2:],hexspeed[-4:-2]]
     #print("hexspeed_2:",hexspeed)
-
     course = state['course']
     hexcourse =  hex(int(round(course,1)))[2:].zfill(4)
     hexcourse = [hexcourse[-2:],hexcourse[-4:-2]]
-    
-    
-    
     if rudder>=0:
         hexrudder = hex(int(round(rudder,1)))[2:].zfill(4)
         hexrudder = [hexrudder[-2:],hexrudder[-4:-2]]
     else:
-
         hexrudder = hex(int(round(rudder,1)))[3:].zfill(4)
         hexrudder = [hexrudder[-2:],hexrudder[-4:-2]]
-    
-
-
     if rotation_speed>=0:
         hexrotation = hex(int(round(rotation_speed,1)))[2:].zfill(4)
         hexrotation = [hexrotation[-2:],hexrotation[-4:-2]]
     else:
         hexrotation = hex(int(round(rotation_speed,1)))[3:].zfill(4)
         hexrotation = [hexrotation[-2:],hexrotation[-4:-2]]
-    
     heading = state['heading']
     hexheading =  hex(int(round(heading,1)))[2:].zfill(4)
-    
     hexheading = [hexheading[-2:],hexheading[-4:-2]]
-
     acc_x = state['acc_x']
     if acc_x>=0:
         hexacc_x =  hex(int(round(acc_x,1)*10))[2:].zfill(4)
         hexacc_x = [hexacc_x[-2:],hexacc_x[-4:-2]]
     else:
-
         hexacc_x =  hex(int(round(acc_x,1)*10))[3:].zfill(4)
         hexacc_x = [hexacc_x[-2:],hexacc_x[-4:-2]]
-        
-
     acc_y = state['acc_y']
     if acc_y>=0:
-        
         hexacc_y =  hex(int(round(acc_y,1)*10))[2:].zfill(4)
         hexacc_y = [hexacc_y[-2:],hexacc_y[-4:-2]]
     else:
         hexacc_y =  hex(int(round(acc_y,1)*10))[3:].zfill(4)
         hexacc_y = [hexacc_y[-2:],hexacc_y[-4:-2]]
-
     acc_z = state['acc_z']
     if acc_z >=0:
-        
         hexacc_z =  hex(int(round(acc_z,1)*10))[2:].zfill(4)
         hexacc_z = [hexacc_z[-2:],hexacc_z[-4:-2]]
     else:
         hexacc_z =  hex(int(round(acc_z,1)*10))[3:].zfill(4)
         hexacc_z = [hexacc_z[-2:],hexacc_z[-4:-2]]
-    
     print("time:",hextime)
     print("lat:",hexlat)
     print("lon:",hexlon)
@@ -307,21 +264,16 @@ def make6845(state):
     print("acc_x:",hexacc_x)
     print("acc_y:",hexacc_y)
     print("acc_z:",hexacc_z)
-    
-    
-    
     hexmode = hex(int(round(now_control_mode,1)))[2:].zfill(2)
    # print("hexmode_1:",hexmode)
     hexmode = [hexmode]
    # print("hexmode_2:",hexmode)
-    
 #     read io for rpm 
 #     read adc for rudder angle and current
     try:
         hex_rudder_angle = hex(rudder_angle)
     except:
         hex_rudder_angle = hex(0)
-    
     hexlist[13:19] = hextime
     hexlist[20:24] = hexlon
     hexlist[25:29] = hexlat
@@ -337,17 +289,13 @@ def make6845(state):
     hexlist[73:75] = hexrudder
     hexlist[75:77] = hexcourse
     #print("heading:",hexheading)
-    
     print("hexrudder=",hexrudder)
     print("control_mode_2",hexlist[57:58])  
-    
     # use static checksum 
     # hexlist[-2] = checksum(hexlist[9:-2])
     hexline = ' '.join(hexlist)
     #print(hexlist[57],430098)
     return hexline
-
-
 # for udp sending and recieving
 udpclient = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 # server = ("192.168.1.211",8922)
@@ -375,35 +323,25 @@ def SEND():
         #print("compassinfo",**compassinfo)
         try:
             compassinfo = { **compass_info}
-
         except:
             compassinfo = dict(acc_x=0,acc_y=0,acc_z=0,pitch=0,heading=0,roll=0)
         state_present = {**gpsinfo, **compassinfo}
-
 #         if (state_last != state_present):
         data = make6845(state_present)
 # data = str(state_present)
         #print("data:",data)
         #print("state_present:",state_present)
 #         trans string data to hex
-        datalist = data.split(" ")
-        
-        
+        datalist = data.split(" ") 
         datastr = ''.join(datalist)
-        
-
         print("datastr:",datastr)
         datastr = codecs.decode(datastr, "hex")
         udpclient.sendto(datastr, server)
         #print("send data: "+str(time.time())+","+str(datastr))
-
         state_last = state_present
             # print(data)
             # del(statedict)
         time.sleep(.1)
-
-
-        
 udpserver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udpserver.bind(("0.0.0.0", 9002))
 udpserver.settimeout(3.0)
@@ -451,7 +389,6 @@ def RECV():
     rudder_pwm_num = 1
     manual_command_time = 0
     while True: 
-
         try:
             udpserver.setblocking(False)  
             udp_recieve,__ = udpserver.recvfrom(1024)
