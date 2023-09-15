@@ -374,6 +374,12 @@ def CommandProcessing():
             usvdata.propellerpwm = 1000
             usvdata.aim_rudder = 0
         time.sleep(.1)
+        
+import subprocess
+# 停止 pigpiod 服务
+subprocess.run(['sudo', 'systemctl', 'stop', 'pigpiod'])
+# 启动 pigpiod 服务
+subprocess.run(['sudo', 'systemctl', 'start', 'pigpiod'])
 # gpio init
 pi = pigpio.pi() 
 ESC_GPIO_PIN = 27  
